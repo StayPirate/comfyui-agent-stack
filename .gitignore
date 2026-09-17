@@ -1,0 +1,24 @@
+# Local environment
+.env
+*.local
+
+# Persistent data (kept on disk, not in git)
+data/models/*
+data/input/*
+data/output/*
+data/custom_nodes/*
+data/user/*
+!data/**/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/

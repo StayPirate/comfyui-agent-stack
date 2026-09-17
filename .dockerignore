@@ -1,0 +1,14 @@
+.git
+.github
+.gitignore
+.env
+.env.example
+data
+docs
+examples
+scripts
+models.manifest.txt
+Makefile
+compose.cpu.yaml
+**/*.md
+!docker/*.md

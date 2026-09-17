@@ -1,0 +1,12 @@
+{
+  // Drop-in snippet for opencode (~/.config/opencode/opencode.json).
+  // The stack exposes comfy-mcp over Streamable HTTP; no local install needed.
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "comfyui": {
+      "type": "remote",
+      "url": "http://127.0.0.1:8080/mcp",
+      "enabled": true
+    }
+  }
+}

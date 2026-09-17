@@ -1,0 +1,21 @@
+# Extra model search paths for ComfyUI.
+#
+# This file is mounted read-only at /opt/ComfyUI/extra_model_paths.yaml.
+# By default it defines nothing, so ComfyUI only uses ./data/models.
+#
+# To reuse a model library that already lives on the host, add a block like:
+#
+#   my_library:
+#     base_path: /models
+#     checkpoints: checkpoints
+#     loras: loras
+#     vae: vae
+#     clip: clip
+#     unet: unet
+#     controlnet: controlnet
+#
+# ...then mount that host directory into the container in compose.yaml, e.g.:
+#
+#   - /mnt/models:/models:ro
+#
+# Docs: https://docs.comfy.org/essentials/comfyui-extra-model-paths

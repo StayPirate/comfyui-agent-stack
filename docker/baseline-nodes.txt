@@ -1,0 +1,8 @@
+# One entry per line: <git-url> [git-ref]
+# Leave the ref empty to track the repository default branch.
+# These are seeded into ./data/custom_nodes on first start and never overwrite
+# what is already there. Add or remove entries to fit your workflow.
+https://github.com/ltdrdata/ComfyUI-Manager.git
+https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git
+https://github.com/rgthree/rgthree-comfy.git
+https://github.com/pythongosssss/ComfyUI-Custom-Scripts.git

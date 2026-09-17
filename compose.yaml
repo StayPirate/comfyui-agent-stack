@@ -1,0 +1,51 @@
+name: comfyui-agent-stack
+
+services:
+  comfyui:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        COMFYUI_REF: ${COMFYUI_REF:-master}
+    image: ${COMFYUI_IMAGE:-comfyui-agent-stack:local}
+    container_name: comfyui-agent-stack
+    restart: unless-stopped
+    ports:
+      # Bound to loopback by default. Change to 0.0.0.0 only behind a firewall
+      # or an authenticating reverse proxy.
+      - "127.0.0.1:${COMFYUI_PORT:-8188}:8188"
+      - "127.0.0.1:${MCP_PORT:-8080}:8080"
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-UTC}
+      COMFYUI_PORT: "8188"
+      MCP_PORT: "8080"
+      MCP_PATH: ${MCP_PATH:-/mcp}
+      MCP_STATEFUL: ${MCP_STATEFUL:-true}
+      MCP_DEBUG: ${MCP_DEBUG:-false}
+      # Extra ComfyUI launch flags, e.g. "--lowvram --preview-method auto"
+      COMFYUI_ARGS: ${COMFYUI_ARGS:-}
+      # Optional: partner-API models (Flux, Kling, Seedance, ...) spend credits.
+      # Uncomment and set in .env to enable them.
+      # COMFY_API_KEY: ${COMFY_API_KEY:-}
+    volumes:
+      - ./data/models:/opt/ComfyUI/models
+      - ./data/input:/opt/ComfyUI/input
+      - ./data/output:/opt/ComfyUI/output
+      - ./data/custom_nodes:/opt/ComfyUI/custom_nodes
+      - ./data/user:/opt/ComfyUI/user
+      - ./config/extra_model_paths.yaml:/opt/ComfyUI/extra_model_paths.yaml:ro
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8188/system_stats"]
+      interval: 30s
+      timeout: 5s
+      start_period: 180s
+      retries: 5

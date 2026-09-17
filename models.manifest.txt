@@ -1,0 +1,12 @@
+# Optional model bootstrap list.
+#
+# The stack ships without models: agents can discover and download them on
+# demand through comfy-mcp (search_models / download_model) or comfy-cli
+# (`comfy model download`). This file is a convenience shortcut only.
+#
+# One entry per line: <model-type>|<url>|<filename>
+#   model-type is a folder under data/models/, e.g. checkpoints, loras, vae.
+#
+# Example (uncomment and verify the URL before use):
+# checkpoints|https://huggingface.co/<repo>/resolve/main/<file>.safetensors|<file>.safetensors
+# loras|https://huggingface.co/<repo>/resolve/main/<file>.safetensors|<file>.safetensors

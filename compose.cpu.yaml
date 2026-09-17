@@ -1,0 +1,11 @@
+# CPU-only override:  docker compose -f compose.yaml -f compose.cpu.yaml up -d
+#
+# Generation runs on the CPU and is very slow; useful for smoke tests, workflow
+# validation and UI exploration on machines without an NVIDIA GPU. For real
+# workloads without a GPU prefer partner-API nodes (COMFY_API_KEY) instead.
+services:
+  comfyui:
+    deploy:
+      resources:
+        reservations:
+          devices: !reset []
