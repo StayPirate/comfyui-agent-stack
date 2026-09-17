@@ -53,10 +53,22 @@ cd "${COMFYUI_DIR}"
 
 # --- 6. Start ComfyUI -------------------------------------------------------
 log "launching ComfyUI on 0.0.0.0:${COMFYUI_PORT}"
+launch_log="$(mktemp)"
 # Extra ComfyUI flags go after `--` (comfy-cli forwards them to main.py).
 # shellcheck disable=SC2086
-gosu comfy comfy launch --background -- --listen 0.0.0.0 --port "${COMFYUI_PORT}" ${COMFYUI_ARGS} \
-  >/dev/null 2>&1 || { log "ERROR: 'comfy launch' failed"; exit 1; }
+if ! gosu comfy comfy launch --background -- --listen 0.0.0.0 --port "${COMFYUI_PORT}" ${COMFYUI_ARGS} \
+    >"${launch_log}" 2>&1; then
+  log "ERROR: 'comfy launch' failed; output follows"
+  sed 's/^/[comfy launch] /' "${launch_log}" >&2 || true
+  comfy_log="${COMFYUI_DIR}/user/comfyui_${COMFYUI_PORT}.log"
+  if [ -f "${comfy_log}" ]; then
+    log "last lines of ${comfy_log}:"
+    tail -n 40 "${comfy_log}" >&2 || true
+  fi
+  rm -f "${launch_log}"
+  exit 1
+fi
+rm -f "${launch_log}"
 
 # --- 7. Wait until the API answers ------------------------------------------
 ready=false
