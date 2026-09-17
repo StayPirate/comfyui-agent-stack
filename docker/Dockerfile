@@ -65,6 +65,7 @@ RUN set -eux; \
     mkdir -p "${COMFY_BASELINE_DIR}/custom_nodes"; \
     while read -r repo ref; do \
       [ -z "${repo:-}" ] && continue; \
+      case "${repo}" in \#*) continue;; esac; \
       name="$(basename "${repo}" .git)"; \
       if [ -n "${ref:-}" ]; then \
         git clone --depth 1 --branch "${ref}" "${repo}" "${COMFY_BASELINE_DIR}/custom_nodes/${name}"; \
