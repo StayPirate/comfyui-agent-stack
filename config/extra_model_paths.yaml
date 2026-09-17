@@ -19,3 +19,7 @@
 #   - /mnt/models:/models:ro
 #
 # Docs: https://docs.comfy.org/essentials/comfyui-extra-model-paths
+#
+# Must be a valid YAML mapping: a file with only comments parses to `null` and
+# crashes ComfyUI's loader. Keep the `{}` unless you add blocks above.
+{}
