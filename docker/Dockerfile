@@ -93,8 +93,10 @@ RUN comfy --version \
     && supergateway --help >/dev/null
 
 # --- Non-root runtime user --------------------------------------------------
-RUN groupadd -g 1000 comfy \
-    && useradd -m -u 1000 -g 1000 -s /bin/bash comfy \
+# Ubuntu base images already ship a uid/gid 1000 account, so allow non-unique
+# IDs; the entrypoint remaps this user to PUID/PGID at runtime.
+RUN groupadd -o -g 1000 comfy \
+    && useradd -o -m -u 1000 -g 1000 -s /bin/bash comfy \
     && chown -R comfy:comfy "${COMFYUI_DIR}" "${COMFY_BASELINE_DIR}"
 
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
