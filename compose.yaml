@@ -11,10 +11,12 @@ services:
     container_name: comfyui-agent-stack
     restart: unless-stopped
     ports:
-      # Bound to loopback by default. Change to 0.0.0.0 only behind a firewall
-      # or an authenticating reverse proxy.
-      - "127.0.0.1:${COMFYUI_PORT:-8188}:8188"
-      - "127.0.0.1:${MCP_PORT:-8080}:8080"
+      # Bind addresses are configurable via COMFYUI_BIND / MCP_BIND and default
+      # to loopback. Set them to 0.0.0.0 (or a specific host IP) only behind a
+      # firewall or an authenticating reverse proxy: neither the web UI nor the
+      # MCP endpoint has any authentication.
+      - "${COMFYUI_BIND:-127.0.0.1}:${COMFYUI_PORT:-8188}:8188"
+      - "${MCP_BIND:-127.0.0.1}:${MCP_PORT:-8080}:8080"
     environment:
       PUID: ${PUID:-1000}
       PGID: ${PGID:-1000}

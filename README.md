@@ -52,6 +52,11 @@ make logs                # wait for "ComfyUI is ready"
 - Web UI: <http://127.0.0.1:8188>
 - MCP endpoint: <http://127.0.0.1:8080/mcp>
 
+To open the web UI from another machine on your LAN, set `COMFYUI_BIND` in
+`.env` to the host's IP (or `0.0.0.0`); see
+[`docs/configuration.md#ports-and-exposure`](docs/configuration.md#ports-and-exposure).
+There is no authentication, so keep the MCP port on loopback.
+
 ### Without cloning the repo
 
 ```bash

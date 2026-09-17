@@ -35,6 +35,23 @@ Common causes:
    mapping cannot reach it — report it, since the bridge is expected on
    `0.0.0.0`.
 
+6. **After recreating the container** (`docker compose up -d` following a change
+   to ports, env, or image) any MCP session the client had opened is
+   invalidated — the bridge keeps no session state across a restart and the
+   client may not re-initialize mid-session. Calls then fail with
+   `No valid session ID provided`. Restart the agent client. The endpoint itself
+   is fine; confirm with a fresh handshake:
+
+   ```bash
+   curl -si -X POST http://127.0.0.1:8080/mcp \
+     -H 'Content-Type: application/json' \
+     -H 'Accept: application/json, text/event-stream' \
+     -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"probe","version":"0"}}}'
+   ```
+
+   A `200` with an `mcp-session-id` response header means the endpoint is
+   healthy.
+
 ## "Missing model" when running a workflow
 
 Expected on a model-free image. Ask the agent to download it:

@@ -7,6 +7,8 @@ All runtime knobs are read by Docker Compose from `.env` (copy
 | -------------- | --------- | ------------------------------------------------ |
 | `PUID`/`PGID`  | `1000`    | Owner of files written into `./data`             |
 | `TZ`           | `UTC`     | Container timezone                               |
+| `COMFYUI_BIND` | `127.0.0.1` | Host bind address for the web UI               |
+| `MCP_BIND`     | `127.0.0.1` | Host bind address for the MCP endpoint         |
 | `COMFYUI_PORT` | `8188`    | **Host** port for the web UI (container listens on 8188) |
 | `MCP_PORT`     | `8080`    | Host port for the MCP endpoint                   |
 | `MCP_PATH`     | `/mcp`    | Path of the MCP endpoint                         |
@@ -34,10 +36,16 @@ and add a bind mount for that directory in [`../compose.yaml`](../compose.yaml).
 
 ## Ports and exposure
 
-Both ports are bound to `127.0.0.1` in `compose.yaml`. The MCP endpoint has **no
-authentication** — do not expose it to an untrusted network. To reach it from
-another machine, use an SSH tunnel or an authenticating reverse proxy, and
-change the binding deliberately.
+Both ports bind to the loopback address by default, controlled by
+`COMFYUI_BIND` and `MCP_BIND`. To open the web UI from another machine on a
+trusted LAN, set `COMFYUI_BIND` to the host's LAN IP — or to `0.0.0.0` when a
+firewall protects the host. Prefer a specific interface address over `0.0.0.0`.
+
+Neither the web UI nor the MCP endpoint has **any authentication**. Exposing the
+MCP port lets a client drive ComfyUI — including installing node packs, which
+execute third-party code — so keep `MCP_BIND=127.0.0.1` and use an SSH tunnel or
+an authenticating reverse proxy for remote access. Changing a bind address
+requires recreating the container (`docker compose up -d`), not just a restart.
 
 ## Security
 
