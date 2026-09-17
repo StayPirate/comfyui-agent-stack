@@ -19,7 +19,9 @@ services:
       PUID: ${PUID:-1000}
       PGID: ${PGID:-1000}
       TZ: ${TZ:-UTC}
-      COMFYUI_PORT: "8188"
+      # The container always serves ComfyUI on 8188; only the host mapping
+      # (COMFYUI_PORT in .env) changes. COMFYUI_PORT is deliberately NOT passed
+      # into the container: comfy-mcp reserves that name for a remote target.
       MCP_PORT: "8080"
       MCP_PATH: ${MCP_PATH:-/mcp}
       MCP_STATEFUL: ${MCP_STATEFUL:-true}

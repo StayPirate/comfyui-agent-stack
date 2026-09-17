@@ -11,7 +11,7 @@ set -euo pipefail
 
 PUID="${PUID:-1000}"
 PGID="${PGID:-1000}"
-COMFYUI_PORT="${COMFYUI_PORT:-8188}"
+COMFY_HTTP_PORT="${COMFY_HTTP_PORT:-8188}"
 MCP_PORT="${MCP_PORT:-8080}"
 MCP_PATH="${MCP_PATH:-/mcp}"
 MCP_STATEFUL="${MCP_STATEFUL:-true}"
@@ -52,15 +52,15 @@ gosu comfy comfy set-default "${COMFYUI_DIR}" >/dev/null 2>&1 \
 cd "${COMFYUI_DIR}"
 
 # --- 6. Start ComfyUI -------------------------------------------------------
-log "launching ComfyUI on 0.0.0.0:${COMFYUI_PORT}"
+log "launching ComfyUI on 0.0.0.0:${COMFY_HTTP_PORT}"
 launch_log="$(mktemp)"
 # Extra ComfyUI flags go after `--` (comfy-cli forwards them to main.py).
 # shellcheck disable=SC2086
-if ! gosu comfy comfy launch --background -- --listen 0.0.0.0 --port "${COMFYUI_PORT}" ${COMFYUI_ARGS} \
+if ! gosu comfy comfy launch --background -- --listen 0.0.0.0 --port "${COMFY_HTTP_PORT}" ${COMFYUI_ARGS} \
     >"${launch_log}" 2>&1; then
   log "ERROR: 'comfy launch' failed; output follows"
   sed 's/^/[comfy launch] /' "${launch_log}" >&2 || true
-  comfy_log="${COMFYUI_DIR}/user/comfyui_${COMFYUI_PORT}.log"
+  comfy_log="${COMFYUI_DIR}/user/comfyui_${COMFY_HTTP_PORT}.log"
   if [ -f "${comfy_log}" ]; then
     log "last lines of ${comfy_log}:"
     tail -n 40 "${comfy_log}" >&2 || true
@@ -73,7 +73,7 @@ rm -f "${launch_log}"
 # --- 7. Wait until the API answers ------------------------------------------
 ready=false
 for _ in $(seq 1 150); do
-  if curl -fsS "http://127.0.0.1:${COMFYUI_PORT}/system_stats" >/dev/null 2>&1; then
+  if curl -fsS "http://127.0.0.1:${COMFY_HTTP_PORT}/system_stats" >/dev/null 2>&1; then
     ready=true
     break
   fi
@@ -90,7 +90,7 @@ log "ComfyUI is ready"
   fails=0
   while true; do
     sleep 20
-    if curl -fsS "http://127.0.0.1:${COMFYUI_PORT}/system_stats" >/dev/null 2>&1; then
+    if curl -fsS "http://127.0.0.1:${COMFY_HTTP_PORT}/system_stats" >/dev/null 2>&1; then
       fails=0
     else
       fails=$((fails + 1))

@@ -7,7 +7,7 @@ All runtime knobs are read by Docker Compose from `.env` (copy
 | -------------- | --------- | ------------------------------------------------ |
 | `PUID`/`PGID`  | `1000`    | Owner of files written into `./data`             |
 | `TZ`           | `UTC`     | Container timezone                               |
-| `COMFYUI_PORT` | `8188`    | Host port for the web UI                         |
+| `COMFYUI_PORT` | `8188`    | **Host** port for the web UI (container listens on 8188) |
 | `MCP_PORT`     | `8080`    | Host port for the MCP endpoint                   |
 | `MCP_PATH`     | `/mcp`    | Path of the MCP endpoint                         |
 | `MCP_STATEFUL` | `true`    | Streamable-HTTP session mode for the MCP bridge  |

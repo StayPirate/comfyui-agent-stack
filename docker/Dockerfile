@@ -114,7 +114,10 @@ COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # --- Runtime defaults (override in compose/.env) ----------------------------
-ENV COMFYUI_PORT=8188 \
+# NB: the in-container ComfyUI port is COMFY_HTTP_PORT, not COMFYUI_PORT:
+# comfy-mcp reserves COMFYUI_PORT for a remote target and errors when it is set
+# without COMFYUI_HOST.
+ENV COMFY_HTTP_PORT=8188 \
     MCP_PORT=8080 \
     MCP_PATH=/mcp \
     MCP_STATEFUL=true \
@@ -126,6 +129,6 @@ ENV COMFYUI_PORT=8188 \
 EXPOSE 8188 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=180s --retries=5 \
-    CMD curl -fsS "http://127.0.0.1:${COMFYUI_PORT}/system_stats" >/dev/null || exit 1
+    CMD curl -fsS "http://127.0.0.1:${COMFY_HTTP_PORT}/system_stats" >/dev/null || exit 1
 
 ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoint.sh"]
