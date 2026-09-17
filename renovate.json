@@ -1,0 +1,35 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":pinDigests"],
+  "timezone": "Europe/Rome",
+  "schedule": ["before 6am on monday"],
+  "rangeStrategy": "pin",
+  "prConcurrentLimit": 5,
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["^docker/Dockerfile$"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?\\s*\\nARG \\w+=(?<currentValue>\\S+)"
+      ]
+    }
+  ],
+  "packageRules": [
+    {
+      "matchPackageNames": ["torch", "torchvision", "torchaudio"],
+      "groupName": "PyTorch trio",
+      "description": "Must move together; CI import check guards ABI compatibility. Approve manually.",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions"
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["nvidia/cuda"],
+      "groupName": "CUDA base image",
+      "dependencyDashboardApproval": true
+    }
+  ]
+}
