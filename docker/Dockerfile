@@ -11,17 +11,25 @@ FROM nvidia/cuda:${CUDA_VERSION}-cudnn-runtime-ubuntu${UBUNTU_VERSION}
 ARG DEBIAN_FRONTEND=noninteractive
 
 # --- Pinned upstream versions (override with --build-arg) -------------------
+# `# renovate:` annotations are consumed by Renovate (see renovate.json).
 ARG COMFYUI_REPO=https://github.com/comfyanonymous/ComfyUI.git
+# renovate: datasource=github-releases depName=comfyanonymous/ComfyUI
 ARG COMFYUI_REF=v0.36.0
-ARG COMFY_CLI_SPEC=comfy-cli==1.20.0
-ARG COMFY_MCP_SPEC=comfy-mcp==0.10.0
+# renovate: datasource=pypi depName=comfy-cli
+ARG COMFY_CLI_VERSION=1.20.0
+# renovate: datasource=pypi depName=comfy-mcp
+ARG COMFY_MCP_VERSION=0.10.0
 ARG PYTORCH_INDEX_URL=https://download.pytorch.org/whl/cu126
 # Newest mutually-compatible trio (torchaudio has no build newer than 2.11).
+# renovate: datasource=pypi depName=torch
 ARG TORCH_VERSION=2.11.0
+# renovate: datasource=pypi depName=torchvision
 ARG TORCHVISION_VERSION=0.26.0
+# renovate: datasource=pypi depName=torchaudio
 ARG TORCHAUDIO_VERSION=2.11.0
 ARG NODE_MAJOR=24
-ARG SUPER_GATEWAY_SPEC=supergateway@3.4.3
+# renovate: datasource=npm depName=supergateway
+ARG SUPER_GATEWAY_VERSION=3.4.3
 
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
@@ -58,12 +66,12 @@ RUN git clone "${COMFYUI_REPO}" "${COMFYUI_DIR}" \
     && pip install -r "${COMFYUI_DIR}/requirements.txt"
 
 # --- comfy-cli (engine) + comfy-mcp (stdio MCP server) ----------------------
-RUN pip install "${COMFY_CLI_SPEC}" "${COMFY_MCP_SPEC}"
+RUN pip install "comfy-cli==${COMFY_CLI_VERSION}" "comfy-mcp==${COMFY_MCP_VERSION}"
 
 # --- Streamable-HTTP bridge (stdio MCP -> HTTP for agents) ------------------
 RUN curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR}.x" | bash - \
     && apt-get install -y --no-install-recommends nodejs \
-    && npm install -g "${SUPER_GATEWAY_SPEC}" \
+    && npm install -g "supergateway@${SUPER_GATEWAY_VERSION}" \
     && npm cache clean --force \
     && rm -rf /var/lib/apt/lists/*
 
@@ -88,9 +96,12 @@ RUN set -eux; \
     rm -f /tmp/baseline-nodes.txt
 
 # --- Build-time sanity check (no post-build image pull needed) --------------
+# The PyTorch import catches an ABI-incompatible torch/torchvision/torchaudio
+# combination before the image is published (e.g. a Renovate bump of only one).
 RUN comfy --version \
     && comfy-mcp --help >/dev/null \
-    && supergateway --help >/dev/null
+    && supergateway --help >/dev/null \
+    && python -c "import torch, torchvision, torchaudio; print('torch', torch.__version__)"
 
 # --- Non-root runtime user --------------------------------------------------
 # Ubuntu base images already ship a uid/gid 1000 account, so allow non-unique
