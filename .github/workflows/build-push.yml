@@ -59,13 +59,3 @@ jobs:
           sbom: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Smoke test image (GPU-free)
-        if: github.event_name != 'pull_request'
-        run: |
-          set -euo pipefail
-          IMAGE="$(printf '%s\n' '${{ steps.meta.outputs.tags }}' | head -n1)"
-          echo "Testing ${IMAGE}"
-          docker run --rm --entrypoint comfy "${IMAGE}" --version
-          docker run --rm --entrypoint comfy-mcp "${IMAGE}" --help
-          docker run --rm --entrypoint supergateway "${IMAGE}" --help

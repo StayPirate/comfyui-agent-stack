@@ -131,7 +131,7 @@ All knobs live in `.env` (see [`.env.example`](.env.example)):
 | `MCP_PATH`     | `/mcp`  | Path of the MCP endpoint                         |
 | `MCP_STATEFUL` | `true`  | Streamable-HTTP session mode for the MCP bridge  |
 | `COMFYUI_ARGS` | –       | Extra ComfyUI flags, e.g. `--lowvram`            |
-| `COMFYUI_REF`  | `master`| ComfyUI git ref baked into the image             |
+| `COMFYUI_REF`  | `v0.36.0`| ComfyUI git ref baked into the image            |
 | `COMFYUI_IMAGE`| local   | Image tag; point to `ghcr.io/<you>/…` to consume |
 
 ### GPU VRAM flags
@@ -179,11 +179,13 @@ anonymous pulls.
 
 ```bash
 docker compose build \
-  --build-arg COMFYUI_REF=v0.3.60 \
-  --build-arg COMFY_MCP_SPEC=comfy-mcp==<version>
+  --build-arg COMFYUI_REF=v0.36.0 \
+  --build-arg COMFY_MCP_SPEC=comfy-mcp==0.10.0
 ```
 
-`COMFYUI_REF` can be any branch, tag or commit. For reproducible images, pin a
+`COMFYUI_REF` can be any branch, tag or commit. CUDA, Ubuntu, PyTorch,
+comfy-cli, comfy-mcp, Node and supergateway versions are all `ARG`s at the top
+of [`docker/Dockerfile`](docker/Dockerfile). For reproducible images, pin a
 tag or commit and consider enabling Renovate/Dependabot for updates.
 
 ---

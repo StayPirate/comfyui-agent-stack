@@ -3,8 +3,8 @@
 # ComfyUI Agent Stack
 # GPU-ready ComfyUI + comfy-cli + comfy-mcp, exposed to AI agents over MCP.
 # ---------------------------------------------------------------------------
-ARG CUDA_VERSION=12.4.1
-ARG UBUNTU_VERSION=22.04
+ARG CUDA_VERSION=12.6.3
+ARG UBUNTU_VERSION=24.04
 
 FROM nvidia/cuda:${CUDA_VERSION}-cudnn-runtime-ubuntu${UBUNTU_VERSION}
 
@@ -12,12 +12,16 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 # --- Pinned upstream versions (override with --build-arg) -------------------
 ARG COMFYUI_REPO=https://github.com/comfyanonymous/ComfyUI.git
-ARG COMFYUI_REF=master
-ARG COMFY_CLI_SPEC=comfy-cli>=1.14.0
-ARG COMFY_MCP_SPEC=comfy-mcp
-ARG PYTORCH_INDEX_URL=https://download.pytorch.org/whl/cu124
-ARG NODE_MAJOR=20
-ARG SUPER_GATEWAY_SPEC=supergateway
+ARG COMFYUI_REF=v0.36.0
+ARG COMFY_CLI_SPEC=comfy-cli==1.20.0
+ARG COMFY_MCP_SPEC=comfy-mcp==0.10.0
+ARG PYTORCH_INDEX_URL=https://download.pytorch.org/whl/cu126
+# Newest mutually-compatible trio (torchaudio has no build newer than 2.11).
+ARG TORCH_VERSION=2.11.0
+ARG TORCHVISION_VERSION=0.26.0
+ARG TORCHAUDIO_VERSION=2.11.0
+ARG NODE_MAJOR=24
+ARG SUPER_GATEWAY_SPEC=supergateway@3.4.3
 
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
@@ -41,7 +45,11 @@ RUN python3 -m venv "${VIRTUAL_ENV}" \
     && pip install --upgrade pip setuptools wheel
 
 # --- PyTorch (heaviest layer; kept early for cache reuse) -------------------
-RUN pip install --index-url "${PYTORCH_INDEX_URL}" torch torchvision torchaudio
+# Pinned as a compatible trio; cu126 matches the CUDA 12.6 base image.
+RUN pip install --index-url "${PYTORCH_INDEX_URL}" \
+      "torch==${TORCH_VERSION}" \
+      "torchvision==${TORCHVISION_VERSION}" \
+      "torchaudio==${TORCHAUDIO_VERSION}"
 
 # --- ComfyUI core (pinned by ref; resolved commit recorded) -----------------
 RUN git clone "${COMFYUI_REPO}" "${COMFYUI_DIR}" \
@@ -78,6 +86,11 @@ RUN set -eux; \
       fi; \
     done < /tmp/baseline-nodes.txt; \
     rm -f /tmp/baseline-nodes.txt
+
+# --- Build-time sanity check (no post-build image pull needed) --------------
+RUN comfy --version \
+    && comfy-mcp --help >/dev/null \
+    && supergateway --help >/dev/null
 
 # --- Non-root runtime user --------------------------------------------------
 RUN groupadd -g 1000 comfy \
