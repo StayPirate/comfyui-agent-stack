@@ -3,6 +3,18 @@
 The stack uses a two-tier strategy so that the image stays buildable and the
 first run is not a wall of missing-node errors.
 
+## Tier 0 — ComfyUI-Manager (pip, always present)
+
+Manager is **not** a custom-node clone anymore. ComfyUI ships its pinned version
+in `manager_requirements.txt`, which the image installs as a pip package
+(`comfyui_manager` / `cm-cli`); `comfy launch` then injects `--enable-manager`.
+This is what powers `comfy-cli`'s node install/update commands.
+
+A git-cloned Manager under `custom_nodes/` is deliberately blocked by policy in
+that mode, so the baseline no longer seeds one. If an older volume still has
+`custom_nodes/ComfyUI-Manager`, the entrypoint moves it to
+`custom_nodes/.disabled/` on startup.
+
 ## Tier 1 — baseline (baked, seeded on first start)
 
 Defined in [`docker/baseline-nodes.txt`](../docker/baseline-nodes.txt). The
@@ -11,7 +23,6 @@ on first start and are **never** overwritten afterwards. The default set:
 
 | Pack                          | Why it is included                |
 | ----------------------------- | --------------------------------- |
-| ComfyUI-Manager               | runtime node install/update       |
 | ComfyUI-VideoHelperSuite      | video/image sequence IO           |
 | rgthree-comfy                 | widely-used workflow utilities    |
 | ComfyUI-Custom-Scripts        | general quality-of-life nodes     |
@@ -42,6 +53,25 @@ run_workflow
   whole image.
 - Freshness: agents install the current version of a pack when needed.
 - Size: many packs pull large dependencies that most users never use.
+
+## System libraries vs. Python packages
+
+The split that keeps the image useful without bloating it:
+
+- **System libraries (apt) are baked in.** They cannot be installed durably at
+  runtime — an agent's `apt-get install` lands in the container's writable layer
+  and is lost on the next rebuild — so the common ones for image/video/audio
+  packs ship in the image: `portaudio19-dev`, `libsndfile1-dev`,
+  `libsamplerate0-dev`, `fluidsynth`/`libfluidsynth-dev`, `sox`/`libsox-fmt-all`
+  and `libsm6`, alongside `ffmpeg`.
+- **Python packages are left to the node packs.** Each pack declares its own
+  `requirements.txt`/`pyproject.toml`; with Manager working, `install_node`
+  installs them. Baking a broad Python set would duplicate those and risk
+  pinning conflicts with the PyTorch/numpy stack.
+
+So if a pack needs `pyaudio`, `soundfile` or `pretty_midi`, its `pip install`
+succeeds against the baked system headers instead of failing on a missing
+`portaudio.h`. The Python package itself is still installed on demand.
 
 ## Manual management
 

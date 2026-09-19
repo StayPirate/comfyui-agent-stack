@@ -38,6 +38,20 @@ if [ -d "${COMFY_BASELINE_DIR}/custom_nodes" ]; then
   cp -rn "${COMFY_BASELINE_DIR}"/custom_nodes/. "${COMFYUI_DIR}/custom_nodes/" 2>/dev/null || true
 fi
 
+# --- 3b. Retire the legacy git-cloned ComfyUI-Manager ----------------------
+# Manager now ships as a pip package (manager_requirements.txt) enabled with
+# --enable-manager; a git-clone under custom_nodes/ is blocked by policy. Move
+# it aside so the log stays clean and it cannot be mistaken for the active
+# Manager. Idempotent: the source disappears after the first run.
+legacy_manager="${COMFYUI_DIR}/custom_nodes/ComfyUI-Manager"
+if [ -d "${legacy_manager}" ]; then
+  mkdir -p "${COMFYUI_DIR}/custom_nodes/.disabled"
+  dest_manager="${COMFYUI_DIR}/custom_nodes/.disabled/ComfyUI-Manager"
+  log "retiring legacy ComfyUI-Manager clone to custom_nodes/.disabled/"
+  rm -rf "${dest_manager}"
+  mv "${legacy_manager}" "${dest_manager}"
+fi
+
 # --- 4. Make mounted directories writable by the runtime user --------------
 chown -R comfy:comfy \
   "${COMFYUI_DIR}/models" \

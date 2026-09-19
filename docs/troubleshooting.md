@@ -52,6 +52,23 @@ Common causes:
    A `200` with an `mcp-session-id` response header means the endpoint is
    healthy.
 
+## Node install fails / Manager is not available
+
+The image installs ComfyUI-Manager as a **pip package** (from ComfyUI's
+`manager_requirements.txt`) and `comfy launch` enables it with
+`--enable-manager`. Verify it inside the container:
+
+```bash
+docker compose exec comfyui bash -lc 'PYTHONPATH=/opt/ComfyUI python -c "import comfyui_manager, cm_cli; print(\"manager ok\")"'
+```
+
+If that fails, the image was built from a ComfyUI ref without
+`manager_requirements.txt`, or the pip install did not run — rebuild the image.
+A git-cloned `ComfyUI-Manager` under `custom_nodes/` is **not** the active
+Manager and is blocked by policy; the entrypoint moves it to
+`custom_nodes/.disabled/`. Seeing `Blocked by policy: .../ComfyUI-Manager` in
+the log is therefore expected for an old volume until it is retired.
+
 ## "Missing model" when running a workflow
 
 Expected on a model-free image. Ask the agent to download it:
@@ -96,3 +113,9 @@ put the key in `.env`, and restart. You can also sign in with
 Node dependencies installed by packs live in the image venv, not in `./data`.
 After a rebuild, reinstall the affected pack through Manager or run
 `comfy node reinstall <name>`.
+
+System libraries (apt) are different: the common image/video/audio ones
+(`portaudio19-dev`, `libsndfile1-dev`, `fluidsynth`, `sox`, …) are baked into
+the image. An `apt-get install` you run inside a container does **not** survive
+a rebuild — if a pack needs a system package that is not in the image, add it to
+`docker/Dockerfile` and rebuild rather than installing it by hand.

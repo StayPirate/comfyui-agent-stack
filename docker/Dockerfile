@@ -40,12 +40,25 @@ ENV PYTHONUNBUFFERED=1 \
     PATH="/opt/venv/bin:${PATH}"
 
 # --- System packages --------------------------------------------------------
+# The multimedia block covers the system libraries that common image/video/audio
+# node packs need to build or call (pip cannot provide them, and apt installs
+# made by an agent at runtime do not survive a container rebuild):
+#   portaudio19-dev -> PyAudio / sounddevice / soundcard
+#   libsndfile1-dev -> soundfile / libsndfile bindings
+#   fluidsynth(+dev)-> pyfluidsynth / midi2audio (the `fluidsynth` binary)
+#   sox, libsox-fmt-all -> packs shelling out to sox
+#   libsamplerate0-dev -> samplerate / resampy
+#   libsm6 -> some OpenCV/GUI-based nodes
 RUN apt-get update && apt-get install -y --no-install-recommends \
       python3 python3-venv python3-dev python3-pip \
       git curl ca-certificates gnupg \
       ffmpeg jq aria2 \
       build-essential \
       libgl1 libglib2.0-0 \
+      portaudio19-dev libsndfile1-dev libsamplerate0-dev \
+      fluidsynth libfluidsynth-dev \
+      sox libsox-fmt-all \
+      libsm6 \
       tini gosu \
     && rm -rf /var/lib/apt/lists/*
 
@@ -64,6 +77,17 @@ RUN git clone "${COMFYUI_REPO}" "${COMFYUI_DIR}" \
     && git -C "${COMFYUI_DIR}" checkout "${COMFYUI_REF}" \
     && git -C "${COMFYUI_DIR}" rev-parse HEAD > /opt/ComfyUI.commit \
     && pip install -r "${COMFYUI_DIR}/requirements.txt"
+
+# --- ComfyUI-Manager (pip package, required by comfy-cli --enable-manager) --
+# ComfyUI ships the pinned manager version in manager_requirements.txt; without
+# it comfy-cli cannot inject --enable-manager and the legacy git-clone Manager
+# is blocked by policy, leaving node installs broken. Guarded for older refs
+# that predate the file.
+RUN if [ -f "${COMFYUI_DIR}/manager_requirements.txt" ]; then \
+      pip install -r "${COMFYUI_DIR}/manager_requirements.txt"; \
+    else \
+      echo "warning: ${COMFYUI_DIR}/manager_requirements.txt not found"; \
+    fi
 
 # --- comfy-cli (engine) + comfy-mcp (stdio MCP server) ----------------------
 RUN pip install "comfy-cli==${COMFY_CLI_VERSION}" "comfy-mcp==${COMFY_MCP_VERSION}"
@@ -101,6 +125,7 @@ RUN set -eux; \
 RUN comfy --version \
     && comfy-mcp --help >/dev/null \
     && supergateway --help >/dev/null \
+    && PYTHONPATH="${COMFYUI_DIR}" python -c "import comfyui_manager, cm_cli; print('manager ok')" \
     && python -c "import torch, torchvision, torchaudio; print('torch', torch.__version__)"
 
 # --- Non-root runtime user --------------------------------------------------

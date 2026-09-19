@@ -21,8 +21,12 @@ validates the workflow, runs it and collects the output.
   (smaller image, no model licensing headaches).
 - **Persistent storage** — config, inputs, outputs, models, custom nodes and
   user settings live in `./data`, easy to back up and inspect.
-- **Two-tier custom nodes** — a small pinned baseline is seeded on first start;
-  workflow-specific packs are installed on demand by the agent.
+- **Two-tier custom nodes** — ComfyUI-Manager ships as a pip package; a small
+  pinned baseline is seeded on first start and workflow-specific packs are
+  installed on demand by the agent.
+- **Media-ready base** — the system libraries common image/video/audio node
+  packs need (`portaudio19-dev`, `libsndfile1-dev`, `fluidsynth`, `sox`, …) are
+  baked in, so their Python dependencies install without manual `apt`.
 - **CI/CD ready** — GitHub Actions publishes to `ghcr.io` with SBOM and
   provenance, plus a weekly security scan and Renovate updates.
 

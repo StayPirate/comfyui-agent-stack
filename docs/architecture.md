@@ -46,6 +46,12 @@ keeps baseline packs in `/opt/comfy-baseline/custom_nodes` and the entrypoint
 copies them in with `cp -rn` (no-clobber), so user-installed packs are never
 overwritten.
 
+**ComfyUI-Manager as a pip package.** Manager is installed from ComfyUI's
+`manager_requirements.txt` into the venv (not cloned into `custom_nodes`), and
+`comfy launch` enables it with `--enable-manager`. A legacy git-clone under
+`custom_nodes/` is blocked by policy in that mode; the entrypoint retires any
+found on an older volume to `custom_nodes/.disabled/`.
+
 ## Startup sequence
 
 1. `tini` becomes PID 1 (signal handling, reaping).
