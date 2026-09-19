@@ -18,6 +18,11 @@ All runtime knobs are read by Docker Compose from `.env` (copy
 | `COMFYUI_REF`  | `v0.36.0` | ComfyUI git ref baked into the image             |
 | `COMFYUI_IMAGE`| local     | Image to run; point it at your `ghcr.io` tag     |
 
+`PUID`/`PGID` also govern the image's virtualenv ownership: the venv is built
+for uid/gid `1000`, so runtime node/dependency installs (`install_node`,
+`comfy node fix`) require `PUID=1000`. With a different `PUID`, run those through
+`docker compose exec` (root) or rebuild the image with a matching uid.
+
 ## GPU / VRAM flags
 
 `COMFYUI_ARGS` is the place for VRAM tuning on smaller cards:

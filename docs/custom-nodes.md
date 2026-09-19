@@ -71,7 +71,17 @@ The split that keeps the image useful without bloating it:
 
 So if a pack needs `pyaudio`, `soundfile` or `pretty_midi`, its `pip install`
 succeeds against the baked system headers instead of failing on a missing
-`portaudio.h`. The Python package itself is still installed on demand.
+`portaudio.h`. The Python package itself is still installed on demand — which is
+why common media libraries such as `pyaudio`, `matplotlib`, `openunmix`, `mido`,
+`pygame` or `scikit-image` are deliberately **not** baked in.
+
+For that on-demand install to work, the image creates the runtime user
+**before** the virtualenv and runs every `pip install` as that user, so the venv
+is owned by it (`PUID`, default `1000`) and writable at runtime. Node packs land
+in `./data/custom_nodes` (a bind mount) and their Python dependencies in the
+venv — both survive as long as you keep `PUID=1000`, the image's build-time uid.
+With a different `PUID`, install nodes/dependencies via `docker compose exec` as
+root, or rebuild the image with a matching uid.
 
 ## Manual management
 

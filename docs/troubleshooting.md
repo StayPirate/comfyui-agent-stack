@@ -69,6 +69,16 @@ Manager and is blocked by policy; the entrypoint moves it to
 `custom_nodes/.disabled/`. Seeing `Blocked by policy: .../ComfyUI-Manager` in
 the log is therefore expected for an old volume until it is retired.
 
+If Manager is present but installing a node fails with `Failed to create
+directory /opt/venv/...: Permission denied`, the runtime user does not own the
+virtualenv. The image builds the venv as the default runtime user (`uid 1000`),
+so this happens when `PUID` is set to something else. Either set `PUID=1000` in
+`.env` and recreate the container, or install the node as root:
+
+```bash
+docker compose exec comfyui bash -lc 'comfy node install <registry-id>'
+```
+
 ## "Missing model" when running a workflow
 
 Expected on a model-free image. Ask the agent to download it:

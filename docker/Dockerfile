@@ -62,12 +62,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       tini gosu \
     && rm -rf /var/lib/apt/lists/*
 
+# --- Runtime user (created before the venv so the venv is owned by it) ------
+# Ubuntu base images already ship a uid/gid 1000 account, so allow non-unique
+# IDs; the entrypoint remaps this user to PUID/PGID at runtime. Every pip
+# install below runs as this user, so the venv is writable at runtime and
+# Manager/comfy-cli can install node-pack dependencies without root.
+RUN groupadd -o -g 1000 comfy \
+    && useradd -o -m -u 1000 -g 1000 -s /bin/bash comfy
+
 RUN python3 -m venv "${VIRTUAL_ENV}" \
-    && pip install --upgrade pip setuptools wheel
+    && chown -R comfy:comfy "${VIRTUAL_ENV}" \
+    && gosu comfy pip install --upgrade pip setuptools wheel
 
 # --- PyTorch (heaviest layer; kept early for cache reuse) -------------------
 # Pinned as a compatible trio; cu126 matches the CUDA 12.6 base image.
-RUN pip install --index-url "${PYTORCH_INDEX_URL}" \
+RUN gosu comfy pip install --index-url "${PYTORCH_INDEX_URL}" \
       "torch==${TORCH_VERSION}" \
       "torchvision==${TORCHVISION_VERSION}" \
       "torchaudio==${TORCHAUDIO_VERSION}"
@@ -76,7 +85,7 @@ RUN pip install --index-url "${PYTORCH_INDEX_URL}" \
 RUN git clone "${COMFYUI_REPO}" "${COMFYUI_DIR}" \
     && git -C "${COMFYUI_DIR}" checkout "${COMFYUI_REF}" \
     && git -C "${COMFYUI_DIR}" rev-parse HEAD > /opt/ComfyUI.commit \
-    && pip install -r "${COMFYUI_DIR}/requirements.txt"
+    && gosu comfy pip install -r "${COMFYUI_DIR}/requirements.txt"
 
 # --- ComfyUI-Manager (pip package, required by comfy-cli --enable-manager) --
 # ComfyUI ships the pinned manager version in manager_requirements.txt; without
@@ -84,13 +93,13 @@ RUN git clone "${COMFYUI_REPO}" "${COMFYUI_DIR}" \
 # is blocked by policy, leaving node installs broken. Guarded for older refs
 # that predate the file.
 RUN if [ -f "${COMFYUI_DIR}/manager_requirements.txt" ]; then \
-      pip install -r "${COMFYUI_DIR}/manager_requirements.txt"; \
+      gosu comfy pip install -r "${COMFYUI_DIR}/manager_requirements.txt"; \
     else \
       echo "warning: ${COMFYUI_DIR}/manager_requirements.txt not found"; \
     fi
 
 # --- comfy-cli (engine) + comfy-mcp (stdio MCP server) ----------------------
-RUN pip install "comfy-cli==${COMFY_CLI_VERSION}" "comfy-mcp==${COMFY_MCP_VERSION}"
+RUN gosu comfy pip install "comfy-cli==${COMFY_CLI_VERSION}" "comfy-mcp==${COMFY_MCP_VERSION}"
 
 # --- Streamable-HTTP bridge (stdio MCP -> HTTP for agents) ------------------
 RUN curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR}.x" | bash - \
@@ -113,7 +122,7 @@ RUN set -eux; \
         git clone --depth 1 "${repo}" "${COMFY_BASELINE_DIR}/custom_nodes/${name}"; \
       fi; \
       if [ -f "${COMFY_BASELINE_DIR}/custom_nodes/${name}/requirements.txt" ]; then \
-        pip install -r "${COMFY_BASELINE_DIR}/custom_nodes/${name}/requirements.txt" \
+        gosu comfy pip install -r "${COMFY_BASELINE_DIR}/custom_nodes/${name}/requirements.txt" \
           || echo "warning: could not install requirements for ${name}"; \
       fi; \
     done < /tmp/baseline-nodes.txt; \
@@ -128,12 +137,10 @@ RUN comfy --version \
     && PYTHONPATH="${COMFYUI_DIR}" python -c "import comfyui_manager, cm_cli; print('manager ok')" \
     && python -c "import torch, torchvision, torchaudio; print('torch', torch.__version__)"
 
-# --- Non-root runtime user --------------------------------------------------
-# Ubuntu base images already ship a uid/gid 1000 account, so allow non-unique
-# IDs; the entrypoint remaps this user to PUID/PGID at runtime.
-RUN groupadd -o -g 1000 comfy \
-    && useradd -o -m -u 1000 -g 1000 -s /bin/bash comfy \
-    && chown -R comfy:comfy "${COMFYUI_DIR}" "${COMFY_BASELINE_DIR}"
+# --- Ownership of the runtime trees -----------------------------------------
+# The venv is already owned by `comfy` (pip ran as that user). Hand over the
+# source trees too so ComfyUI can write bytecode caches at runtime.
+RUN chown -R comfy:comfy "${COMFYUI_DIR}" "${COMFY_BASELINE_DIR}"
 
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
