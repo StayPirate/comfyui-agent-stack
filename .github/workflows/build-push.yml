@@ -67,12 +67,16 @@ jobs:
         env:
           IN_COMFYUI_REF: ${{ github.event.inputs.comfyui_ref }}
           IN_CUDA_VERSION: ${{ github.event.inputs.cuda_version }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          REVISION: ${{ github.sha }}
         run: |
           set -euo pipefail
           {
             echo "args<<EOF"
             [ -n "${IN_COMFYUI_REF}" ] && echo "COMFYUI_REF=${IN_COMFYUI_REF}"
             [ -n "${IN_CUDA_VERSION}" ] && echo "CUDA_VERSION=${IN_CUDA_VERSION}"
+            echo "VERSION=${VERSION}"
+            echo "REVISION=${REVISION}"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
@@ -90,3 +94,19 @@ jobs:
           sbom: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
+            --generate-notes \
+            --verify-tag

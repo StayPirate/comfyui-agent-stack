@@ -31,6 +31,12 @@ ARG NODE_MAJOR=24
 # renovate: datasource=npm depName=supergateway
 ARG SUPER_GATEWAY_VERSION=3.4.3
 
+# --- Release metadata (overridden by CI from the git tag/commit) ------------
+# Not managed by Renovate: `VERSION` is this project's SemVer, `REVISION` the
+# commit the image was built from.
+ARG VERSION=dev
+ARG REVISION=unknown
+
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -38,6 +44,21 @@ ENV PYTHONUNBUFFERED=1 \
     COMFYUI_DIR=/opt/ComfyUI \
     COMFY_BASELINE_DIR=/opt/comfy-baseline \
     PATH="/opt/venv/bin:${PATH}"
+
+# --- Image metadata ---------------------------------------------------------
+# OCI labels make the image traceable back to a release and record exactly
+# which upstream components it bundles (`docker inspect` reports all of them).
+LABEL org.opencontainers.image.title="ComfyUI Agent Stack" \
+      org.opencontainers.image.description="GPU-ready ComfyUI + comfy-cli + comfy-mcp, exposed to AI agents over MCP" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.revision="${REVISION}" \
+      org.opencontainers.image.source="https://github.com/StayPirate/comfyui-agent-stack" \
+      org.opencontainers.image.url="https://github.com/StayPirate/comfyui-agent-stack" \
+      org.opencontainers.image.licenses="MIT" \
+      io.github.staypirate.comfyui-agent-stack.comfyui-ref="${COMFYUI_REF}" \
+      io.github.staypirate.comfyui-agent-stack.comfy-cli-version="${COMFY_CLI_VERSION}" \
+      io.github.staypirate.comfyui-agent-stack.comfy-mcp-version="${COMFY_MCP_VERSION}" \
+      io.github.staypirate.comfyui-agent-stack.pytorch-version="${TORCH_VERSION}"
 
 # --- System packages --------------------------------------------------------
 # The multimedia block covers the system libraries that common image/video/audio

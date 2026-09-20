@@ -10,6 +10,7 @@ Cursor, Codex, …) over Streamable HTTP.
 [![lint](https://github.com/StayPirate/comfyui-agent-stack/actions/workflows/lint.yml/badge.svg)](https://github.com/StayPirate/comfyui-agent-stack/actions/workflows/lint.yml)
 [![security-scan](https://github.com/StayPirate/comfyui-agent-stack/actions/workflows/trivy.yml/badge.svg)](https://github.com/StayPirate/comfyui-agent-stack/actions/workflows/trivy.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![GitHub release](https://img.shields.io/github/v/release/StayPirate/comfyui-agent-stack?sort=semver&logo=github)](https://github.com/StayPirate/comfyui-agent-stack/releases)
 [![ghcr.io](https://img.shields.io/badge/ghcr.io-comfyui--agent--stack-blue?logo=github)](https://github.com/StayPirate/comfyui-agent-stack/pkgs/container/comfyui-agent-stack)
 
 Start the stack, point your agent at it, and ask in plain language:
@@ -28,7 +29,9 @@ validates the workflow, runs it and collects the output.
   packs need (`portaudio19-dev`, `libsndfile1-dev`, `fluidsynth`, `sox`, …) are
   baked in, so their Python dependencies install without manual `apt`.
 - **CI/CD ready** — GitHub Actions publishes to `ghcr.io` with SBOM and
-  provenance, plus a weekly security scan and Renovate updates.
+  provenance, plus a weekly security scan and Renovate updates. Releases are
+  [SemVer-tagged](docs/publishing.md#versioning); pin one (e.g.
+  `:0.1.0`) instead of `:latest`, which tracks `main`.
 
 ## Requirements
 

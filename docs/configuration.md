@@ -16,7 +16,7 @@ All runtime knobs are read by Docker Compose from `.env` (copy
 | `MCP_DEBUG`    | `false`   | Verbose bridge logging                           |
 | `COMFYUI_ARGS` | –         | Extra ComfyUI flags, e.g. `--lowvram`            |
 | `COMFYUI_REF`  | `v0.36.0` | ComfyUI git ref baked into the image             |
-| `COMFYUI_IMAGE`| local     | Image to run; point it at your `ghcr.io` tag     |
+| `COMFYUI_IMAGE`| local     | Image to run; pin a release tag (`:0.1.0`), not `:latest` |
 
 `PUID`/`PGID` also govern the image's virtualenv ownership: the venv is built
 for uid/gid `1000`, so runtime node/dependency installs (`install_node`,
